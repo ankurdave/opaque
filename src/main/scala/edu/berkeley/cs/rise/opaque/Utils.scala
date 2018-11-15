@@ -199,6 +199,18 @@ object Utils extends Logging {
     }
   }
 
+  def encrypt(data: Array[Byte]): Array[Byte] = {
+    // TODO: use https://gist.github.com/praseodym/f2499b3e14d872fe5b4a with an all-zero 128-bit key
+    // to encrypt `data`
+    ???
+  }
+
+  def decrypt(data: Array[Byte]): Array[Byte] = {
+    // TODO: use https://gist.github.com/praseodym/f2499b3e14d872fe5b4a with an all-zero 128-bit key
+    // to decrypt `data`
+    ???
+  }
+
   var eid = 0L
   var attested : Boolean = false
   var attesting_getepid : Boolean = false
