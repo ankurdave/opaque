@@ -44,3 +44,31 @@ void shift_up(uint8_t *input_rows, size_t input_rows_length,
   *output_rows = w.output_buffer().release();
   *output_rows_length = w.output_size();
 }
+
+
+void transpose(...) {
+    EncryptedBlocksToRowReader r(...);
+
+    std::vector<std::unique_ptr<FlatbuffersRowWriter>> ws(num_partitions);
+    for (...) {
+        ws.push_back(...);
+    }
+
+    uint32_t i = 0;
+    while (r.has_next()) {
+        ws[i % num_partitions].write(row);
+        i++;
+    }
+
+    FlatbuffersRowWriter shuffle_output_writer;
+    for (uint32_t j = 0; j < ws.size(); j++) {
+        ws[j].write_shuffle_output(ws[j].write_encrypted_blocks(), j);
+
+        ShuffleOutputReader sor(ws[j].output_buffer(), ws[j].output_size());
+        flatbuffers_copy(sor.get(), shuffle_output_writer);
+    }
+
+    shuffle_output_writer.finish(shuffle_output_writer.write_shuffle_outputs());
+    *output_rows = shuffle_output_writer.output_buffer().release();
+    *output_rows_length = shuffle_output_writer.output_size();
+}
