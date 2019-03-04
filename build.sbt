@@ -21,7 +21,7 @@ concurrentRestrictions in Global := Seq(
 
 fork in Test := true
 
-javaOptions in Test ++= Seq("-Xmx2048m", "-XX:ReservedCodeCacheSize=384m")
+javaOptions in Test ++= Seq("-Xmx4096m", "-XX:ReservedCodeCacheSize=384m")
 
 scalacOptions ++= Seq(
   "-deprecation",

@@ -98,21 +98,11 @@ import edu.berkeley.cs.rise.opaque.logical.ConvertToOpaqueOperators
 import edu.berkeley.cs.rise.opaque.logical.EncryptLocalRelation
 
 object Utils extends Logging {
-  private val perf: Boolean = System.getenv("SGX_PERF") == "1"
-
   def time[A](desc: String)(f: => A): A = {
     val start = System.nanoTime
     val result = f
-    if (perf) {
-      logInfo(s"$desc: ${(System.nanoTime - start) / 1000000.0} ms")
-    }
+    logTrace(s"$desc: ${(System.nanoTime - start) / 1000000.0} ms")
     result
-  }
-
-  def logPerf(message: String): Unit = {
-    if (perf) {
-      logInfo(message)
-    }
   }
 
   private def jsonSerialize(x: Any): String = (x: @unchecked) match {
