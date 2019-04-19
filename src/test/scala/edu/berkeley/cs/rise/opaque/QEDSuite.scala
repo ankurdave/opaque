@@ -38,11 +38,24 @@ class QEDSuite extends FunSuite with BeforeAndAfterAll {
     RA.initRA(spark.sparkContext.parallelize(data, 2))
   }
 
-  test("java encryption/decryption") {
+  ignore("java encryption/decryption") {
     val data = Array[Byte](0, 1, 2)
     val (enclave, eid) = Utils.initEnclave()
     assert(data === Utils.decrypt(Utils.encrypt(data)))
     assert(data === Utils.decrypt(enclave.Encrypt(eid, data)))
+  }
+
+  test("sbnda") {
+    import org.apache.spark.sql.DataFrame
+    import org.apache.spark.sql.Column
+    import edu.berkeley.cs.rise.opaque.expressions.DotProduct.dot
+    import edu.berkeley.cs.rise.opaque.implicits._
+    val dir = "/home/ubuntu/sbnda-synthetic"
+    val table1 = spark.read.format("csv").option("header", "true").load(s"$dir/riselab_table1.csv.gz").repartition(10).encrypted
+    val table2 = spark.read.format("csv").option("header", "true").load(s"$dir/riselab_table2.csv.gz").repartition(10).encrypted
+    val table3 = spark.read.format("csv").option("header", "true").load(s"$dir/riselab_table3.csv.gz").repartition(10).encrypted
+    val joined = table1.join(table2.drop("DEF_IND").join(table3.drop("DEF_IND"), "CUST_REF"), "CUST_REF").drop("CUST_REF")
+    joined.show
   }
 }
 

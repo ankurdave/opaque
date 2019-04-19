@@ -5,5 +5,5 @@ commands
 bt
 c
 end
-r -Xmx2048m org.scalatest.run edu.berkeley.cs.rise.opaque.OpaqueSinglePartitionSuite
+r -Xmx4g org.scalatest.run edu.berkeley.cs.rise.opaque.QEDSuite
 bt
