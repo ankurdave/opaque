@@ -644,7 +644,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_berkeley_cs_rise_opaque_execution_SGXEncla
   uint8_t *plaintext_ptr = (uint8_t *) env->GetByteArrayElements(plaintext, &if_copy);
 
   uint8_t *ciphertext_copy = nullptr;
-  const jsize clength = 0;
+  jsize clength = 0;
 
   if (plaintext_ptr == nullptr) {
     ocall_throw("Encrypt: JNI failed to get input byte array.");
@@ -659,7 +659,7 @@ JNIEXPORT jbyteArray JNICALL Java_edu_berkeley_cs_rise_opaque_execution_SGXEncla
   jbyteArray ciphertext = env->NewByteArray(clength);
   env->SetByteArrayRegion(ciphertext, 0, clength, (jbyte *) ciphertext_copy);
 
-  env->ReleaseByteArrayElements(plaintext, ptr, 0);
+  env->ReleaseByteArrayElements(plaintext, (jbyte *) plaintext_ptr, 0);
 
   delete[] ciphertext_copy;
 

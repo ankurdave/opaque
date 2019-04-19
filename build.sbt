@@ -24,7 +24,7 @@ concurrentRestrictions in Global := Seq(
 fork in Test := true
 fork in run := true
 
-javaOptions in Test ++= Seq("-Xmx8g", "-XX:ReservedCodeCacheSize=384m")
+javaOptions in Test ++= Seq("-Xmx16g", "-XX:ReservedCodeCacheSize=384m")
 javaOptions in run ++= Seq(
   "-Xmx2048m", "-XX:ReservedCodeCacheSize=384m", "-Dspark.master=local[1]")
 
