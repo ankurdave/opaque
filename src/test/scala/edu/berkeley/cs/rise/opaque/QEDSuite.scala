@@ -53,6 +53,7 @@ class QEDSuite extends FunSuite with BeforeAndAfterAll {
     import spark.implicits._
     import org.apache.spark.sql.functions._
     import org.apache.spark.sql.types._
+    import org.apache.spark.sql.catalyst.expressions.If
     val dir = "/sbnda/data/synthetic"
     val table1 = spark.read.format("csv").option("header", "true").load(s"$dir/riselab_table1.csv.gz").repartition(10).encrypted
     val table2 = spark.read.format("csv").option("header", "true").load(s"$dir/riselab_table2.csv.gz").repartition(10).encrypted
@@ -67,7 +68,7 @@ class QEDSuite extends FunSuite with BeforeAndAfterAll {
       val expanded = categories.foldLeft(d) { (d2, c) =>
         d2.withColumn(
 	  s"${col}_$c",
-	  when(new Column(col) === c, lit(1.0)).otherwise(lit(0.0)))
+	  new Column(If((new Column(col) === c).expr, lit(1.0).expr, lit(0.0).expr)))
       }
       // Drop the categorical column
       expanded.drop(col)
@@ -96,12 +97,16 @@ class QEDSuite extends FunSuite with BeforeAndAfterAll {
     val predictions = data.select(
       $"y_truth", (lit(1.0) / (lit(1.0) + exp(-(dot(w, $"x") + b)))).as("prediction"))
 
-    // Count the number of correct predictions. Expected: 955543 out of 1000000
-    val numCorrect = predictions.filter(
-      $"y_truth" === lit(1) && $"prediction" >= lit(0.5) ||
-	$"y_truth" === lit(0) && $"prediction" < lit(0.5)).count
+    predictions.show
 
-    assert(numCorrect === 955543)
+    // Count the number of correct predictions. Expected: 955543 out of 1000000
+    val correctPredictions = predictions.filter(
+      $"y_truth" === lit(1) && $"prediction" >= lit(0.5) ||
+	$"y_truth" === lit(0) && $"prediction" < lit(0.5))
+
+    correctPredictions.show
+
+    assert(correctPredictions.count === 955543)
   }
 }
 
