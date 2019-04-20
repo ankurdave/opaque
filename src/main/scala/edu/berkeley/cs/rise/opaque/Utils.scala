@@ -942,8 +942,7 @@ object Utils extends Logging {
               builder, childOffset))
 
         // Complex type creation
-        case (ca @ CreateArray(children), childrenOffsets)
-            if ca.dataType == ArrayType(DoubleType, false) =>
+        case (ca @ CreateArray(children), childrenOffsets) =>
           tuix.Expr.createExpr(
             builder,
             tuix.ExprUnion.CreateArray,
