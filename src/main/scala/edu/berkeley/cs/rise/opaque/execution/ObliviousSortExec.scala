@@ -109,7 +109,7 @@ object ObliviousSortExec extends java.io.Serializable {
 
     // Oblivious sort, untranspose
     val untransposed_data = transposed_data.mapPartitionsWithIndex {
-      (index, l) => l.map(x => ColumnSortOp(x, index, sort_order, 2, r, s))
+      (index, l) => l.map(x => columnSortOp(x, index, sort_order, 2, r, s))
     }.mapPartitions(blockIter => blockIter.flatMap(block =>
       Utils.extractShuffleOutputs(Block(block))))
       .groupByKey()
@@ -118,7 +118,7 @@ object ObliviousSortExec extends java.io.Serializable {
 
     // Oblivious sort, shift down
     val shifted_down_data = untransposed_data.mapPartitionsWithIndex {
-      (index, l) => l.map(x => ColumnSortOp(x, index, sort_order, 3, r, s))
+      (index, l) => l.map(x => columnSortOp(x, index, sort_order, 3, r, s))
     }.mapPartitions(blockIter => blockIter.flatMap(block =>
       Utils.extractShuffleOutputs(Block(block))))
       .groupByKey()
@@ -127,7 +127,7 @@ object ObliviousSortExec extends java.io.Serializable {
 
     // Oblivious sort, shift up
     val shifted_up_data = shifted_down_data.mapPartitionsWithIndex {
-      (index, l) => l.map(x => ColumnSortOp(x, index, sort_order, 4, r, s))
+      (index, l) => l.map(x => columnSortOp(x, index, sort_order, 4, r, s))
     }.mapPartitions(blockIter => blockIter.flatMap(block =>
       Utils.extractShuffleOutputs(Block(block))))
       .groupByKey()

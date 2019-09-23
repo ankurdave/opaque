@@ -35,15 +35,27 @@ import edu.berkeley.cs.rise.opaque.logical._
 
 object OpaqueOperators extends Strategy {
   def apply(plan: LogicalPlan): Seq[SparkPlan] = plan match {
+    // Push filters up through oblivious sort
+    case ObliviousSort(sortOrder1,
+      ObliviousSort(sortOrder2,
+        ObliviousFilter(condition, child))) =>
+      EncryptedFilterExec(condition,
+        ObliviousSortExec(sortOrder2 ++ sortOrder1, planLater(child))) :: Nil
+
     case EncryptedProject(projectList, child) =>
+      EncryptedProjectExec(projectList, planLater(child)) :: Nil
+    case ObliviousProject(projectList, child) =>
+      // All expressions we support are inherently oblivious, so projection is also oblivious.
       EncryptedProjectExec(projectList, planLater(child)) :: Nil
 
     case EncryptedFilter(condition, child) =>
       EncryptedFilterExec(condition, planLater(child)) :: Nil
+    case ObliviousFilter(condition, child) =>
+      // TODO(ankurdave): Insert an oblivious permute before the filter to make it oblivious.
+      EncryptedFilterExec(condition, planLater(child)) :: Nil
 
     case EncryptedSort(order, child) =>
       EncryptedSortExec(order, planLater(child)) :: Nil
-
     case ObliviousSort(order, child) =>
       ObliviousSortExec(order, planLater(child)) :: Nil
 
@@ -73,7 +85,38 @@ object OpaqueOperators extends Strategy {
         case _ => Nil
       }
 
+    case ObliviousJoin(left, right, joinType, condition) =>
+      Join(left, right, joinType, condition) match {
+        case ExtractEquiJoinKeys(_, leftKeys, rightKeys, condition, _, _) =>
+          // TODO(ankur.dave): Padding for join.
+          val (leftProjSchema, leftKeysProj, tag) = tagForJoin(leftKeys, left.output, true)
+          val (rightProjSchema, rightKeysProj, _) = tagForJoin(rightKeys, right.output, false)
+          val leftProj = EncryptedProjectExec(leftProjSchema, planLater(left))
+          val rightProj = EncryptedProjectExec(rightProjSchema, planLater(right))
+          val unioned = EncryptedUnionExec(leftProj, rightProj)
+          val sorted = ObliviousSortExec(sortForJoin(leftKeysProj, tag, unioned.output), unioned)
+          val joined = EncryptedSortMergeJoinExec(
+            joinType,
+            leftKeysProj,
+            rightKeysProj,
+            leftProjSchema.map(_.toAttribute),
+            rightProjSchema.map(_.toAttribute),
+            (leftProjSchema ++ rightProjSchema).map(_.toAttribute),
+            sorted)
+          // TODO(ankur.dave): Permute instead of sorting.
+          val permuted = ObliviousSortExec(Seq(SortOrder(tag, Ascending)), unioned)
+          val tagsDropped = EncryptedProjectExec(dropTags(left.output, right.output), permuted)
+          val filtered = condition match {
+            case Some(condition) => EncryptedFilterExec(condition, tagsDropped)
+            case None => tagsDropped
+          }
+          filtered :: Nil
+        case _ => Nil
+      }
+
     case a @ EncryptedAggregate(groupingExpressions, aggExpressions, child) =>
+      EncryptedAggregateExec(groupingExpressions, aggExpressions, planLater(child)) :: Nil
+    case a @ ObliviousAggregate(groupingExpressions, aggExpressions, child) =>
       EncryptedAggregateExec(groupingExpressions, aggExpressions, planLater(child)) :: Nil
 
     case EncryptedUnion(left, right) =>
