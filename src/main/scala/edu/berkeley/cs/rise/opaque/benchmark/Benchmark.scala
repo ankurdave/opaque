@@ -42,16 +42,7 @@ object Benchmark {
       .getOrCreate()
     Utils.initSQLContext(spark.sqlContext)
 
-    // val numPartitions =
-    //   if (spark.sparkContext.isLocal) 1 else spark.sparkContext.defaultParallelism
-
-    // Warmup
-    LogisticRegression.train(spark, Encrypted, 1000, 1)
-    LogisticRegression.train(spark, Encrypted, 1000, 1)
-
-    // Run
-    LogisticRegression.train(spark, Insecure, 100000, 1)
-    LogisticRegression.train(spark, Encrypted, 100000, 1)
+    AspirinCount.run(spark)
 
     spark.stop()
   }
