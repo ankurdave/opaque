@@ -97,7 +97,7 @@ object OpaqueOperators extends Strategy {
             (leftProjSchema ++ rightProjSchema).map(_.toAttribute),
             sorted)
           // TODO(ankur.dave): Permute instead of sorting.
-          val permuted = ObliviousSortExec(Seq(SortOrder(tag, Ascending)), unioned)
+          val permuted = ObliviousSortExec(Seq(SortOrder(tag, Ascending)), joined)
           val tagsDropped = EncryptedProjectExec(dropTags(left.output, right.output), permuted)
           val filtered = condition match {
             case Some(condition) => EncryptedFilterExec(condition, tagsDropped)
@@ -125,6 +125,9 @@ object OpaqueOperators extends Strategy {
       EncryptedLocalTableScanExec(output, plaintextData) :: Nil
 
     case EncryptedBlockRDD(output, rdd) =>
+      EncryptedBlockRDDScanExec(output, rdd) :: Nil
+
+    case ObliviousBlockRDD(output, rdd) =>
       EncryptedBlockRDDScanExec(output, rdd) :: Nil
 
     case _ => Nil
