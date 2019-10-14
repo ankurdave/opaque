@@ -39,6 +39,7 @@ object Benchmark {
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder()
       .appName("QEDBenchmark")
+      .master("local[1]")
       .getOrCreate()
     Utils.initSQLContext(spark.sqlContext)
 

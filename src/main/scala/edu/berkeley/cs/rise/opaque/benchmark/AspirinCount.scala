@@ -78,9 +78,10 @@ object AspirinCount {
         medication.filter($"medication" === lit(1)),
         diagnosis("patient_id") === medication("patient_id"))
         .encrypted
-        .filter(diagnosis("date") <= medication("date"))
-        .select(diagnosis("patient_id"))
-        .groupBy(diagnosis("patient_id")).agg(count("patient_id"))
+        .select(
+          diagnosis("patient_id"),
+          (diagnosis("date") <= medication("date")).cast("int").as("keep"))
+        .groupBy(diagnosis("patient_id")).agg(sum("keep"))
       Utils.force(result)
       result
     }

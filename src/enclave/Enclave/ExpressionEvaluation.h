@@ -250,6 +250,10 @@ private:
         flatbuffers::GetTemporaryPointer(builder, eval_helper(row, cast->value()));
       bool result_is_null = value->is_null();
       switch (value->value_type()) {
+      case tuix::FieldUnion_BooleanField:
+      {
+        return flatbuffers_cast<tuix::BooleanField, bool>(cast, value, builder, result_is_null);
+      }
       case tuix::FieldUnion_IntegerField:
       {
         return flatbuffers_cast<tuix::IntegerField, int32_t>(cast, value, builder, result_is_null);
